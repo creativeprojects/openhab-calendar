@@ -6,6 +6,8 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strings"
+	"time"
 
 	"github.com/creativeprojects/clog"
 )
@@ -32,18 +34,34 @@ func main() {
 		fmt.Println("ERROR")
 		return
 	}
-	// make sure the calendars are in the right order
-	sort.Slice(config.Calendars, func(i, j int) bool {
-		return config.Calendars[i].Priority < config.Calendars[j].Priority
+
+	// make sure the rules are ordered by priority
+	sort.Slice(config.Rules, func(i, j int) bool {
+		return config.Rules[i].Priority < config.Rules[j].Priority
 	})
 
-	result, err := GetResultFromCalendar(config.Calendars)
+	date, err := parseGetFlag(flags.Get)
+	if err != nil {
+		clog.Error(fmt.Errorf("cannot parse -get option: %w", err))
+	}
+	clog.Debug(date)
+	result, err := GetResultFromCalendar(date, config.Rules)
 	if err != nil {
 		clog.Error(err)
 	}
 	if result == "" {
 		// no match, return the default
+		clog.Error("no match")
 		result = config.Default.Result
 	}
 	fmt.Println(result)
+}
+
+func parseGetFlag(get string) (time.Time, error) {
+	get = strings.TrimSpace(get)
+	if get == "" || strings.ToLower(get) == "tomorrow" {
+		// default to tomorrow
+		return time.Now().AddDate(0, 0, 1), nil
+	}
+	return time.Parse(time.RFC3339, get)
 }

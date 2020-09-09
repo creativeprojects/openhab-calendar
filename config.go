@@ -7,17 +7,22 @@ import (
 )
 
 type Configuration struct {
-	Calendars []CalendarConfiguration `json:"calendars"`
-	Default   DefaultConfiguration    `json:"default"`
+	Rules   []RuleConfiguration  `json:"rules"`
+	Default DefaultConfiguration `json:"default"`
+}
+
+type RuleConfiguration struct {
+	Priority int                   `json:"priority"`
+	Name     string                `json:"name"`
+	Weekdays []Weekday             `json:"weekdays"`
+	Calendar CalendarConfiguration `json:"calendar"`
+	Result   string                `json:"result"`
 }
 
 type CalendarConfiguration struct {
-	Priority int    `json:"priority"`
-	Name     string `json:"name"`
 	URL      string `json:"url"`
 	Username string `json:"username"`
 	Password string `json:"password"`
-	Result   string `json:"result"`
 }
 
 type DefaultConfiguration struct {
