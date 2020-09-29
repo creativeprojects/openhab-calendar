@@ -35,5 +35,8 @@ clean:
 build-prod:
 		GOOS="linux" GOARCH="arm" GOARM="7" $(GOBUILD) -o ${BUILD_PROD}/$(BINARY) -v
 
+build-test:
+		GOOS="linux" GOARCH="amd64" $(GOBUILD) -o ${BUILD_PROD}/$(BINARY) -v
+
 deploy: build-prod
 		rsync -avz ${BUILD_PROD}/$(BINARY) $(CONFIG) $(DEPLOY_SERVER):$(DEPLOY_DIR)

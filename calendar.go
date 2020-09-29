@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	ics "github.com/arran4/golang-ical"
@@ -11,7 +13,27 @@ import (
 	"github.com/icholy/digest"
 )
 
-func LoadCalendar(URL, username, password string) (*ics.Calendar, error) {
+func LoadCalendar(filename, URL, username, password string) (*ics.Calendar, error) {
+	if filename != "" {
+		return LoadLocalCalendar(filename)
+	}
+	if URL != "" {
+		return LoadRemoteCalendar(URL, username, password)
+	}
+	return nil, errors.New("not enough parameter (need either file or url)")
+}
+
+func LoadLocalCalendar(filename string) (*ics.Calendar, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	return ics.ParseCalendar(file)
+}
+
+func LoadRemoteCalendar(URL, username, password string) (*ics.Calendar, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -42,12 +64,12 @@ func GetResultFromCalendar(date time.Time, rules []RuleConfiguration) (string, e
 		if !HasMatchingDays(date, rule.Weekdays) {
 			continue
 		}
-		if rule.Calendar.URL == "" {
+		if rule.Calendar.URL == "" && rule.Calendar.File == "" {
 			// no calendar to check, this is a simple weekday match
 			return rule.Result, nil
 		}
 		clog.Debugf("Loading %s...", rule.Name)
-		cal, err := LoadCalendar(rule.Calendar.URL, rule.Calendar.Username, rule.Calendar.Password)
+		cal, err := LoadCalendar(rule.Calendar.File, rule.Calendar.URL, rule.Calendar.Username, rule.Calendar.Password)
 		if err != nil {
 			return "ERROR", fmt.Errorf("cannot load calendar '%s': %w", rule.Name, err)
 		}
