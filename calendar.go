@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"time"
 
 	ics "github.com/arran4/golang-ical"
@@ -24,6 +25,14 @@ func LoadCalendar(filename, URL, username, password string) (*ics.Calendar, erro
 }
 
 func LoadLocalCalendar(filename string) (*ics.Calendar, error) {
+	// path relative to the binary
+	if !path.IsAbs(filename) {
+		me, err := os.Executable()
+		if err == nil {
+			dir := path.Dir(me)
+			filename = path.Join(dir, filename)
+		}
+	}
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err

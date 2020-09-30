@@ -14,7 +14,8 @@ func setupLogger(verbose bool) func() {
 	// otherwise use a file log
 	fileHandler, err := clog.NewFileHandler(LogFile, "", log.LstdFlags)
 	if err != nil {
-		// just forget it
+		// console - no verbose
+		clog.SetDefaultLogger(clog.NewLogger(clog.NewLevelFilter(clog.LevelInfo, clog.NewConsoleHandler("", log.LstdFlags))))
 		return func() {}
 	}
 	clog.SetDefaultLogger(clog.NewLogger(clog.NewLevelFilter(clog.LevelInfo, fileHandler)))

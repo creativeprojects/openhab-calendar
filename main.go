@@ -17,7 +17,7 @@ func main() {
 	closeLogger := setupLogger(flags.Verbose)
 	defer closeLogger()
 
-	// set the configuration file relative to the the binary
+	// set the configuration file relative to the binary
 	configFile := ConfigFile
 	if !path.IsAbs(configFile) {
 		me, err := os.Executable()
