@@ -43,6 +43,8 @@ func main() {
 	date, err := parseGetFlag(flags.Get)
 	if err != nil {
 		clog.Error(fmt.Errorf("cannot parse -get option: %w", err))
+		fmt.Println("ERROR")
+		return
 	}
 	clog.Debug(date)
 	result, err := GetResultFromCalendar(date, config.Rules)
@@ -61,7 +63,7 @@ func parseGetFlag(get string) (time.Time, error) {
 	get = strings.TrimSpace(get)
 	if get == "" || strings.ToLower(get) == "tomorrow" {
 		// default to tomorrow
-		return time.Now().AddDate(0, 0, 1), nil
+		return time.Now().UTC().AddDate(0, 0, 1), nil
 	}
 	return time.Parse(time.RFC3339, get)
 }

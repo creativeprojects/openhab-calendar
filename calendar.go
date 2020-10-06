@@ -86,6 +86,7 @@ func GetResultFromCalendar(date time.Time, rules []RuleConfiguration) (string, e
 		if events == nil || len(events) == 0 {
 			continue
 		}
+		clog.Debugf("  %s calendar has %d entries", rule.Name, len(events))
 		if HasMatchingEvent(date, events) {
 			return rule.Result, nil
 		}
@@ -124,9 +125,11 @@ func HasMatchingEvent(day time.Time, events []*ics.VEvent) bool {
 		if err != nil {
 			continue
 		}
+		clog.Debugf("    event from %v to %v", startTime, endTime)
 		if day.After(startTime) && day.Before(endTime) {
 			return true
 		}
 	}
+	clog.Debug("  --> no match")
 	return false
 }
