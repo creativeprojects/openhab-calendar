@@ -7,7 +7,7 @@ GOTOOL=$(GOCMD) tool
 GOGET=$(GOCMD) get
 
 BINARY=openhab-calendar
-CONFIG=config.json
+CONFIG=config*.json
 DEPLOY_SERVER=openhab.lan
 DEPLOY_DIR=~/openhab-calendar/
 BUILD_PROD=./build
