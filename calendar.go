@@ -111,17 +111,19 @@ func HasMatchingDays(day time.Time, weekdays []Weekday) bool {
 
 func HasMatchingEvent(day time.Time, events []*ics.VEvent) bool {
 	dateFormat := "20060102"
+	loc, _ := time.LoadLocation("Local")
+
 	for _, event := range events {
 		start := event.GetProperty(ics.ComponentPropertyDtStart)
 		end := event.GetProperty(ics.ComponentPropertyDtEnd)
 		if start == nil || end == nil {
 			continue
 		}
-		startTime, err := time.Parse(dateFormat, start.Value)
+		startTime, err := time.ParseInLocation(dateFormat, start.Value, loc)
 		if err != nil {
 			continue
 		}
-		endTime, err := time.Parse(dateFormat, end.Value)
+		endTime, err := time.ParseInLocation(dateFormat, end.Value, loc)
 		if err != nil {
 			continue
 		}

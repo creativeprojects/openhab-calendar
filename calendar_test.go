@@ -26,9 +26,12 @@ func TestMatchingDays(t *testing.T) {
 		{"20200915", nil, true},
 	}
 
+	loc, err := time.LoadLocation("Local")
+	require.NoError(t, err)
+
 	for _, testItem := range testData {
 		t.Run(testItem.day, func(t *testing.T) {
-			day, err := time.Parse(dateFormat, testItem.day)
+			day, err := time.ParseInLocation(dateFormat, testItem.day, loc)
 			require.NoError(t, err)
 			assert.Equal(t, testItem.expected, HasMatchingDays(day, testItem.weekdays))
 		})
@@ -62,9 +65,12 @@ func TestGetResultFromCalendar(t *testing.T) {
 		{"20200915", "Weekday"},
 	}
 
+	loc, err := time.LoadLocation("Local")
+	require.NoError(t, err)
+
 	for _, testItem := range testData {
 		t.Run(testItem.day, func(t *testing.T) {
-			day, err := time.Parse(dateFormat, testItem.day)
+			day, err := time.ParseInLocation(dateFormat, testItem.day, loc)
 			require.NoError(t, err)
 
 			result, err := GetResultFromCalendar(day, rules)

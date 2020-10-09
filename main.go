@@ -63,7 +63,7 @@ func parseGetFlag(get string) (time.Time, error) {
 	get = strings.TrimSpace(get)
 	if get == "" || strings.ToLower(get) == "tomorrow" {
 		// default to tomorrow
-		return time.Now().UTC().AddDate(0, 0, 1), nil
+		return getTomorrow(time.Now()), nil
 	}
 	return time.Parse(time.RFC3339, get)
 }
