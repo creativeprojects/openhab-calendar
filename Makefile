@@ -14,7 +14,7 @@ BUILD_PROD=./build
 TESTS=./...
 COVERAGE_FILE=coverage.out
 
-.PHONY: all test build coverage clean build-prod deploy
+.PHONY: all test build coverage clean build-prod deploy deploy-config
 
 all: test build
 
@@ -39,4 +39,7 @@ build-test:
 		GOOS="linux" GOARCH="amd64" $(GOBUILD) -o ${BUILD_PROD}/$(BINARY) -v
 
 deploy: build-prod
-		rsync -avz ${BUILD_PROD}/$(BINARY) $(CONFIG) $(DEPLOY_SERVER):$(DEPLOY_DIR)
+		rsync -avz ${BUILD_PROD}/$(BINARY) $(DEPLOY_SERVER):$(DEPLOY_DIR)
+
+deploy-config: build-prod
+		rsync -avz $(CONFIG) $(DEPLOY_SERVER):$(DEPLOY_DIR)
