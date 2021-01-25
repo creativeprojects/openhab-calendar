@@ -4,9 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"path"
 	"sort"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/creativeprojects/clog"
@@ -40,6 +43,13 @@ func main() {
 		return config.Rules[i].Priority < config.Rules[j].Priority
 	})
 
+	// daemon mode?
+	if flags.Daemon {
+		startServer(config)
+		return
+	}
+	// Legacy CLI mode
+
 	date, err := parseGetFlag(flags.Get)
 	if err != nil {
 		clog.Error(fmt.Errorf("cannot parse -get option: %w", err))
@@ -66,4 +76,54 @@ func parseGetFlag(get string) (time.Time, error) {
 		return getTomorrow(time.Now()), nil
 	}
 	return time.Parse(time.RFC3339, get)
+}
+
+func startServer(config Configuration) {
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGABRT, syscall.SIGTERM)
+
+	notifyReady()
+
+	// systemd watchdog
+	go setupWatchdog()
+
+	servers := setupServices(config)
+	if len(servers) > 0 {
+		// Wait until we're politely asked to leave
+		<-stop
+	}
+
+	notifyLeaving()
+	shutdownServices(servers)
+}
+
+func setupServices(config Configuration) map[string]*HTTPServer {
+	httpServers := make(map[string]*HTTPServer, len(config.Servers))
+	for name, s := range config.Servers {
+		httpServer, err := NewHTTPServer(name, s)
+		if err != nil {
+			clog.Errorf("cannot start server %q: %v", name, err)
+			continue
+		}
+		httpServers[name] = httpServer
+		go httpServer.Start()
+	}
+	return httpServers
+}
+
+func shutdownServices(httpServers map[string]*HTTPServer) {
+	if len(httpServers) == 0 {
+		return
+	}
+	clog.Info("shutting down...")
+	var wg sync.WaitGroup
+	wg.Add(len(httpServers))
+	for _, s := range httpServers {
+		if s == nil {
+			wg.Done()
+			continue
+		}
+		go s.Shutdown(&wg, 1*time.Minute)
+	}
+	wg.Wait()
 }

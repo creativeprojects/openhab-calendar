@@ -7,8 +7,9 @@ import (
 )
 
 type Configuration struct {
-	Rules   []RuleConfiguration  `json:"rules"`
-	Default DefaultConfiguration `json:"default"`
+	Rules   []RuleConfiguration            `json:"rules"`
+	Default DefaultConfiguration           `json:"default"`
+	Servers map[string]ServerConfiguration `json:"servers"`
 }
 
 type RuleConfiguration struct {
@@ -29,6 +30,12 @@ type CalendarConfiguration struct {
 type DefaultConfiguration struct {
 	Name   string `json:"name"`
 	Result string `json:"result"`
+}
+
+type ServerConfiguration struct {
+	Listen      string `json:"listen"`
+	Certificate string `json:"certificate"`
+	PrivateKey  string `json:"privateKey"`
 }
 
 func LoadFileConfiguration(filename string) (Configuration, error) {

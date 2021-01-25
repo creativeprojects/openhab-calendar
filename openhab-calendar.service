@@ -1,0 +1,12 @@
+[Unit]
+Description=OpenHAB Calendar
+
+[Service]
+Type=notify
+WorkingDirectory=/home/openhab-calendar/
+ExecStart=/home/openhab-calendar/openhab-calendar
+WatchdogSec=900s
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
