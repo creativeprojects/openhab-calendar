@@ -1,25 +1,22 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"path"
 	"time"
 
 	ics "github.com/arran4/golang-ical"
 	"github.com/creativeprojects/clog"
-	"github.com/icholy/digest"
 )
 
-func LoadCalendar(filename, URL, username, password string) (*ics.Calendar, error) {
+func LoadCalendar(filename, URL string) (*ics.Calendar, error) {
 	if filename != "" {
 		return LoadLocalCalendar(filename)
 	}
 	if URL != "" {
-		return LoadRemoteCalendar(URL, username, password)
+		return LoadRemoteCalendar(URL)
 	}
 	return nil, errors.New("not enough parameter (need either file or url)")
 }
@@ -42,30 +39,16 @@ func LoadLocalCalendar(filename string) (*ics.Calendar, error) {
 	return ics.ParseCalendar(file)
 }
 
-func LoadRemoteCalendar(URL, username, password string) (*ics.Calendar, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	request, err := http.NewRequestWithContext(ctx, "GET", URL, nil)
+func LoadRemoteCalendar(URL string) (*ics.Calendar, error) {
+	if httpClient == nil {
+		return nil, errors.New("no instance of httpClient")
+	}
+	body, err := httpClient.Get(URL)
+	defer body.Close()
 	if err != nil {
 		return nil, err
 	}
-
-	client := &http.Client{
-		Transport: &digest.Transport{
-			Username: username,
-			Password: password,
-		},
-	}
-	response, err := client.Do(request)
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("server returned %s", response.Status)
-	}
-	return ics.ParseCalendar(response.Body)
+	return ics.ParseCalendar(body)
 }
 
 func GetResultFromCalendar(date time.Time, rules []RuleConfiguration) (string, error) {
@@ -78,7 +61,7 @@ func GetResultFromCalendar(date time.Time, rules []RuleConfiguration) (string, e
 			return rule.Result, nil
 		}
 		clog.Debugf("Loading %s...", rule.Name)
-		cal, err := LoadCalendar(rule.Calendar.File, rule.Calendar.URL, rule.Calendar.Username, rule.Calendar.Password)
+		cal, err := LoadCalendar(rule.Calendar.File, rule.Calendar.URL)
 		if err != nil {
 			return "ERROR", fmt.Errorf("cannot load calendar '%s': %w", rule.Name, err)
 		}

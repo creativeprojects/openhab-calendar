@@ -9,6 +9,7 @@ import (
 type Configuration struct {
 	Rules   []RuleConfiguration            `json:"rules"`
 	Default DefaultConfiguration           `json:"default"`
+	Auth    []AuthConfiguration            `json:"authentication"`
 	Servers map[string]ServerConfiguration `json:"servers"`
 }
 
@@ -21,15 +22,19 @@ type RuleConfiguration struct {
 }
 
 type CalendarConfiguration struct {
-	File     string `json:"file"`
-	URL      string `json:"url"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	File string `json:"file"`
+	URL  string `json:"url"`
 }
 
 type DefaultConfiguration struct {
 	Name   string `json:"name"`
 	Result string `json:"result"`
+}
+
+type AuthConfiguration struct {
+	URL      string `json:"url"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type ServerConfiguration struct {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -15,13 +16,18 @@ import (
 	"github.com/creativeprojects/clog"
 )
 
+var (
+	// httpClient is global for now - we probably want to make it a dependency instead
+	httpClient *HTTPClient
+)
+
 func main() {
 	flag.Parse()
 	closeLogger := setupLogger(flags.Verbose)
 	defer closeLogger()
 
 	// set the configuration file relative to the binary
-	configFile := ConfigFile
+	configFile := flags.ConfigFile
 	if !path.IsAbs(configFile) {
 		me, err := os.Executable()
 		if err == nil {
@@ -43,6 +49,9 @@ func main() {
 		return config.Rules[i].Priority < config.Rules[j].Priority
 	})
 
+	// global http client
+	httpClient = NewHTTPClient(config)
+
 	// daemon mode?
 	if flags.Daemon {
 		startServer(config)
@@ -50,26 +59,35 @@ func main() {
 	}
 	// Legacy CLI mode
 
-	date, err := parseGetFlag(flags.Get)
-	if err != nil {
-		clog.Error(fmt.Errorf("cannot parse -get option: %w", err))
-		fmt.Println("ERROR")
-		return
+	date := flags.Get
+	if flags.Get == "" && flags.Date != "" {
+		date = flags.Date
 	}
-	clog.Debug(date)
-	result, err := GetResultFromCalendar(date, config.Rules)
+	result, err := getCalendarResult(date, config)
 	if err != nil {
 		clog.Error(err)
-	}
-	if result == "" {
-		// no match, return the default
-		clog.Error("no match")
-		result = config.Default.Result
 	}
 	fmt.Println(result)
 }
 
-func parseGetFlag(get string) (time.Time, error) {
+func getCalendarResult(dateInput string, config Configuration) (string, error) {
+	date, err := parseDate(dateInput)
+	if err != nil {
+		return "ERROR", fmt.Errorf("cannot parse date input: %w", err)
+	}
+	result, err := GetResultFromCalendar(date, config.Rules)
+	if result == "" {
+		// no match: return the default
+		result = config.Default.Result
+		// and an error if there was none
+		if err == nil {
+			err = errors.New("no match")
+		}
+	}
+	return result, err
+}
+
+func parseDate(get string) (time.Time, error) {
 	get = strings.TrimSpace(get)
 	if get == "" || strings.ToLower(get) == "tomorrow" {
 		// default to tomorrow
@@ -106,7 +124,7 @@ func setupServices(config Configuration) map[string]*HTTPServer {
 			continue
 		}
 		httpServers[name] = httpServer
-		go httpServer.Start()
+		go httpServer.Start(config)
 	}
 	return httpServers
 }
@@ -115,7 +133,7 @@ func shutdownServices(httpServers map[string]*HTTPServer) {
 	if len(httpServers) == 0 {
 		return
 	}
-	clog.Info("shutting down...")
+	clog.Debug("shutting down...")
 	var wg sync.WaitGroup
 	wg.Add(len(httpServers))
 	for _, s := range httpServers {

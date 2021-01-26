@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -49,11 +50,12 @@ func NewHTTPServer(name string, config ServerConfiguration) (*HTTPServer, error)
 }
 
 // Start HTTP(s) server
-func (s *HTTPServer) Start() {
-	clog.Infof("%v: listening on %q", s.name, s.listen)
+func (s *HTTPServer) Start(config Configuration) {
+	clog.Debugf("%v: listening on %q", s.name, s.listen)
 	s.server = &http.Server{
-		Addr:    s.listen,
-		Handler: getServeMux(),
+		Addr:     s.listen,
+		Handler:  getServeMux(config),
+		ErrorLog: log.New(clog.NewWriter(clog.LevelError, clog.GetDefaultLogger()), "http.Server", 0),
 	}
 	if s.tls {
 		if err := s.server.ListenAndServeTLS(s.config.Certificate, s.config.PrivateKey); err != http.ErrServerClosed {
@@ -64,12 +66,12 @@ func (s *HTTPServer) Start() {
 			clog.Error(err.Error())
 		}
 	}
-	clog.Warningf("%v: stopped listening", s.name)
+	clog.Debugf("%v: stopped listening", s.name)
 }
 
-func getServeMux() *http.ServeMux {
+func getServeMux(config Configuration) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handler)
+	mux.HandleFunc("/calendar", getCalendarHandler(config))
 
 	return mux
 }
