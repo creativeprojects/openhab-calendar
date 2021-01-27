@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -97,6 +98,42 @@ func (l *Loader) LoadRemoteCalendar(url string) (*ics.Calendar, error) {
 		return nil, fmt.Errorf("server returned %s", response.Status)
 	}
 	return ics.ParseCalendar(response.Body)
+}
+
+func (l *Loader) SaveRemoteCalendar(url, to string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), l.timeout*time.Second)
+	defer cancel()
+
+	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	response, err := l.getClient(url).Do(request)
+	defer response.Body.Close()
+	if err != nil {
+		return err
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("server returned %s", response.Status)
+	}
+	// read all remote content
+	content, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+
+	// open the destination file
+	file, err := os.Create(to)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// copy the calendar to the file
+	_, err = file.Write(content)
+	return err
 }
 
 func (l *Loader) GetResultFromCalendar(date time.Time, rules []RuleConfiguration) (string, error) {

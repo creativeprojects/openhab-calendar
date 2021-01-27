@@ -49,6 +49,12 @@ func main() {
 		startServer(config)
 		return
 	}
+
+	// save mode?
+	if flags.Save {
+		saveCalendars(config)
+		return
+	}
 	// Legacy CLI mode
 
 	loader := NewLoader(config)

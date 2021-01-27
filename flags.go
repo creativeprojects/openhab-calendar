@@ -8,6 +8,7 @@ type Flags struct {
 	Date       string
 	Daemon     bool
 	ConfigFile string
+	Save       bool
 }
 
 var (
@@ -20,4 +21,5 @@ func init() {
 	flag.StringVar(&flags.Date, "date", "tomorrow", "type of request")
 	flag.BoolVar(&flags.Daemon, "d", false, "demonize and answer http requests")
 	flag.StringVar(&flags.ConfigFile, "c", ConfigFile, "configuration file")
+	flag.BoolVar(&flags.Save, "s", false, "save remote calendars into ./files/*.ics")
 }
