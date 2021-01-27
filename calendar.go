@@ -1,27 +1,66 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	ics "github.com/arran4/golang-ical"
 	"github.com/creativeprojects/clog"
+	"github.com/icholy/digest"
 )
 
-func LoadCalendar(filename, URL string) (*ics.Calendar, error) {
-	if filename != "" {
-		return LoadLocalCalendar(filename)
+type httpClient struct {
+	URL      string
+	Username string
+	Password string
+	client   *http.Client
+}
+
+type Loader struct {
+	httpClients []httpClient
+	timeout     time.Duration
+}
+
+func NewLoader(config Configuration) *Loader {
+	httpClients := make([]httpClient, len(config.Auth))
+	for index, clientConfig := range config.Auth {
+		clientConfig.URL = strings.ToLower(clientConfig.URL)
+		clog.Debugf("add authentication for url %q", clientConfig.URL)
+		httpClients[index] = httpClient{
+			URL:      clientConfig.URL,
+			Username: clientConfig.Username,
+			Password: clientConfig.Password,
+			client: &http.Client{
+				Transport: &digest.Transport{
+					Username: clientConfig.Username,
+					Password: clientConfig.Password,
+				},
+			},
+		}
 	}
-	if URL != "" {
-		return LoadRemoteCalendar(URL)
+	return &Loader{
+		httpClients: httpClients,
+		timeout:     Timeout,
+	}
+}
+
+func (l *Loader) LoadCalendar(filename, url string) (*ics.Calendar, error) {
+	if filename != "" {
+		return l.LoadLocalCalendar(filename)
+	}
+	if url != "" {
+		return l.LoadRemoteCalendar(url)
 	}
 	return nil, errors.New("not enough parameter (need either file or url)")
 }
 
-func LoadLocalCalendar(filename string) (*ics.Calendar, error) {
+func (l *Loader) LoadLocalCalendar(filename string) (*ics.Calendar, error) {
 	// path relative to the binary
 	if !path.IsAbs(filename) {
 		me, err := os.Executable()
@@ -39,19 +78,28 @@ func LoadLocalCalendar(filename string) (*ics.Calendar, error) {
 	return ics.ParseCalendar(file)
 }
 
-func LoadRemoteCalendar(URL string) (*ics.Calendar, error) {
-	if httpClient == nil {
-		return nil, errors.New("no instance of httpClient")
-	}
-	body, err := httpClient.Get(URL)
-	defer body.Close()
+func (l *Loader) LoadRemoteCalendar(url string) (*ics.Calendar, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), l.timeout*time.Second)
+	defer cancel()
+
+	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	return ics.ParseCalendar(body)
+
+	response, err := l.getClient(url).Do(request)
+	defer response.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("server returned %s", response.Status)
+	}
+	return ics.ParseCalendar(response.Body)
 }
 
-func GetResultFromCalendar(date time.Time, rules []RuleConfiguration) (string, error) {
+func (l *Loader) GetResultFromCalendar(date time.Time, rules []RuleConfiguration) (string, error) {
 	for _, rule := range rules {
 		if !HasMatchingDays(date, rule.Weekdays) {
 			continue
@@ -61,7 +109,7 @@ func GetResultFromCalendar(date time.Time, rules []RuleConfiguration) (string, e
 			return rule.Result, nil
 		}
 		clog.Debugf("Loading %s...", rule.Name)
-		cal, err := LoadCalendar(rule.Calendar.File, rule.Calendar.URL)
+		cal, err := l.LoadCalendar(rule.Calendar.File, rule.Calendar.URL)
 		if err != nil {
 			return "ERROR", fmt.Errorf("cannot load calendar '%s': %w", rule.Name, err)
 		}
@@ -76,6 +124,19 @@ func GetResultFromCalendar(date time.Time, rules []RuleConfiguration) (string, e
 	}
 	// empty value will return the default
 	return "", nil
+}
+
+func (l *Loader) getClient(url string) *http.Client {
+	if len(l.httpClients) == 0 {
+		return http.DefaultClient
+	}
+	url = strings.ToLower(url)
+	for _, client := range l.httpClients {
+		if strings.HasPrefix(url, client.URL) {
+			return client.client
+		}
+	}
+	return http.DefaultClient
 }
 
 // HasMatchingDays returns true if the date is in the specified weekdays.

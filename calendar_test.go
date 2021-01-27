@@ -68,12 +68,14 @@ func TestGetResultFromCalendar(t *testing.T) {
 	loc, err := time.LoadLocation("Local")
 	require.NoError(t, err)
 
+	loader := NewLoader(Configuration{})
+
 	for _, testItem := range testData {
 		t.Run(testItem.day, func(t *testing.T) {
 			day, err := time.ParseInLocation(dateFormat, testItem.day, loc)
 			require.NoError(t, err)
 
-			result, err := GetResultFromCalendar(day, rules)
+			result, err := loader.GetResultFromCalendar(day, rules)
 			require.NoError(t, err)
 			assert.Equal(t, testItem.result, result)
 		})

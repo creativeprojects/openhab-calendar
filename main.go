@@ -16,11 +16,6 @@ import (
 	"github.com/creativeprojects/clog"
 )
 
-var (
-	// httpClient is global for now - we probably want to make it a dependency instead
-	httpClient *HTTPClient
-)
-
 func main() {
 	flag.Parse()
 	closeLogger := setupLogger(flags.Verbose)
@@ -49,9 +44,6 @@ func main() {
 		return config.Rules[i].Priority < config.Rules[j].Priority
 	})
 
-	// global http client
-	httpClient = NewHTTPClient(config)
-
 	// daemon mode?
 	if flags.Daemon {
 		startServer(config)
@@ -59,23 +51,25 @@ func main() {
 	}
 	// Legacy CLI mode
 
+	loader := NewLoader(config)
+
 	date := flags.Get
 	if flags.Get == "" && flags.Date != "" {
 		date = flags.Date
 	}
-	result, err := getCalendarResult(date, config)
+	result, err := getCalendarResult(date, config, loader)
 	if err != nil {
 		clog.Error(err)
 	}
 	fmt.Println(result)
 }
 
-func getCalendarResult(dateInput string, config Configuration) (string, error) {
+func getCalendarResult(dateInput string, config Configuration, loader *Loader) (string, error) {
 	date, err := parseDate(dateInput)
 	if err != nil {
 		return "ERROR", fmt.Errorf("cannot parse date input: %w", err)
 	}
-	result, err := GetResultFromCalendar(date, config.Rules)
+	result, err := loader.GetResultFromCalendar(date, config.Rules)
 	if result == "" {
 		// no match: return the default
 		result = config.Default.Result

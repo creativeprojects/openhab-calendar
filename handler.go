@@ -14,6 +14,8 @@ type CalendarResult struct {
 }
 
 func getCalendarHandler(config Configuration) http.HandlerFunc {
+	loader := NewLoader(config)
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		path := cleanupPath(r.URL.Path)
 		date := r.URL.Query().Get("date")
@@ -28,7 +30,7 @@ func getCalendarHandler(config Configuration) http.HandlerFunc {
 			result CalendarResult
 			err    error
 		)
-		result.Calendar, err = getCalendarResult(date, config)
+		result.Calendar, err = getCalendarResult(date, config, loader)
 		if err != nil {
 			clog.Error(err)
 			result.Error = err.Error()
