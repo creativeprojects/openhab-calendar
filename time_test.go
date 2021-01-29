@@ -37,11 +37,11 @@ func TestParseLocationFromDifferentTimezone(t *testing.T) {
 	}
 }
 
-func TestTomorrowFromDifferentTimezone(t *testing.T) {
+func TestTomorrowFromDifferentTimezonesInSummer(t *testing.T) {
 	format := "2006-01-02T15:04:05"
-	source := "2020-09-11T00:01:01"
-	expected := "2020-09-12T00:01:01"
-	locations := []string{"Local", "UTC", "Europe/London", "Europe/Paris"}
+	source := "2020-08-11T00:01:01"
+	expected := "2020-08-12T00:01:01"
+	locations := []string{"Local", "GMT", "UTC", "Europe/London", "Europe/Paris"}
 
 	for _, location := range locations {
 		t.Run(location, func(t *testing.T) {
@@ -52,6 +52,29 @@ func TestTomorrowFromDifferentTimezone(t *testing.T) {
 			require.NoError(t, err)
 
 			tomorrow := getTomorrow(date)
+			t.Log(tomorrow)
+
+			assert.Equal(t, expected, tomorrow.Format(format))
+		})
+	}
+}
+
+func TestTomorrowFromDifferentTimezonesInWinter(t *testing.T) {
+	format := "2006-01-02T15:04:05"
+	source := "2020-01-11T00:01:01"
+	expected := "2020-01-12T00:01:01"
+	locations := []string{"Local", "GMT", "UTC", "Europe/London", "Europe/Paris"}
+
+	for _, location := range locations {
+		t.Run(location, func(t *testing.T) {
+			loc, err := time.LoadLocation(location)
+			require.NoError(t, err)
+
+			date, err := time.ParseInLocation(format, source, loc)
+			require.NoError(t, err)
+
+			tomorrow := getTomorrow(date)
+			t.Log(tomorrow)
 
 			assert.Equal(t, expected, tomorrow.Format(format))
 		})
