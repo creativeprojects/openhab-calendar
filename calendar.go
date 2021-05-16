@@ -89,10 +89,10 @@ func (l *Loader) LoadRemoteCalendar(url string) (*ics.Calendar, error) {
 	}
 
 	response, err := l.getClient(url).Do(request)
-	defer response.Body.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("server returned %s", response.Status)
@@ -110,10 +110,10 @@ func (l *Loader) SaveRemoteCalendar(url, to string) error {
 	}
 
 	response, err := l.getClient(url).Do(request)
-	defer response.Body.Close()
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("server returned %s", response.Status)
@@ -151,7 +151,7 @@ func (l *Loader) GetResultFromCalendar(date time.Time, rules []RuleConfiguration
 			return "ERROR", fmt.Errorf("cannot load calendar '%s': %w", rule.Name, err)
 		}
 		events := cal.Events()
-		if events == nil || len(events) == 0 {
+		if len(events) == 0 {
 			continue
 		}
 		clog.Debugf("  %s calendar has %d entries", rule.Name, len(events))
@@ -179,7 +179,7 @@ func (l *Loader) getClient(url string) *http.Client {
 // HasMatchingDays returns true if the date is in the specified weekdays.
 // PLEASE NOTE the function returns TRUE when weekdays slice is empty (or nil)
 func HasMatchingDays(day time.Time, weekdays []Weekday) bool {
-	if weekdays == nil || len(weekdays) == 0 {
+	if len(weekdays) == 0 {
 		return true
 	}
 	for _, weekday := range weekdays {
