@@ -7,10 +7,11 @@ import (
 )
 
 type Configuration struct {
-	Rules   []RuleConfiguration            `json:"rules"`
-	Default DefaultConfiguration           `json:"default"`
-	Auth    []AuthConfiguration            `json:"authentication"`
-	Servers map[string]ServerConfiguration `json:"servers"`
+	Rules     []RuleConfiguration            `json:"rules"`
+	PostRules []PostRuleConfiguration        `json:"post-rules"`
+	Default   DefaultConfiguration           `json:"default"`
+	Auth      []AuthConfiguration            `json:"authentication"`
+	Servers   map[string]ServerConfiguration `json:"servers"`
 }
 
 type RuleConfiguration struct {
@@ -24,6 +25,20 @@ type RuleConfiguration struct {
 type CalendarConfiguration struct {
 	File string `json:"file"`
 	URL  string `json:"url"`
+}
+
+type PostRuleConfiguration struct {
+	Priority int              `json:"priority"`
+	Name     string           `json:"name"`
+	When     *PostRuleMatcher `json:"when"`
+	Previous *PostRuleMatcher `json:"previous"`
+	Next     *PostRuleMatcher `json:"next"`
+	Result   string           `json:"result"`
+}
+
+type PostRuleMatcher struct {
+	Is  string `json:"is"`
+	Not string `json:"not"`
 }
 
 type DefaultConfiguration struct {

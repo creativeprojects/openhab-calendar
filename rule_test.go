@@ -38,7 +38,7 @@ func TestMatchingDays(t *testing.T) {
 	}
 }
 
-func TestGetResultFromCalendar(t *testing.T) {
+func TestGetResultFromRules(t *testing.T) {
 	dateFormat := "20060102"
 	rules := []RuleConfiguration{
 		{
@@ -75,7 +75,7 @@ func TestGetResultFromCalendar(t *testing.T) {
 			day, err := time.ParseInLocation(dateFormat, testItem.day, loc)
 			require.NoError(t, err)
 
-			result, err := loader.GetResultFromCalendar(day, rules)
+			result, err := loader.GetResultFromRules(day, rules)
 			require.NoError(t, err)
 			assert.Equal(t, testItem.result, result)
 		})

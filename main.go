@@ -44,6 +44,11 @@ func main() {
 		return config.Rules[i].Priority < config.Rules[j].Priority
 	})
 
+	// make sure the post-rules are ordered by priority
+	sort.Slice(config.PostRules, func(i, j int) bool {
+		return config.PostRules[i].Priority < config.PostRules[j].Priority
+	})
+
 	// daemon mode?
 	if flags.Daemon {
 		startServer(config)
@@ -75,7 +80,7 @@ func getCalendarResult(dateInput string, config Configuration, loader *Loader) (
 	if err != nil {
 		return "ERROR", fmt.Errorf("cannot parse date input: %w", err)
 	}
-	result, err := loader.GetResultFromCalendar(date, config.Rules)
+	result, err := loader.GetResultFromRules(date, config.Rules)
 	if result == "" {
 		// no match: return the default
 		result = config.Default.Result
@@ -83,7 +88,10 @@ func getCalendarResult(dateInput string, config Configuration, loader *Loader) (
 		if err == nil {
 			err = errors.New("no match")
 		}
+		return result, err
 	}
+	// run the post-rules
+	result, err = loader.PostRules(result, date, config.Rules, config.PostRules)
 	return result, err
 }
 
