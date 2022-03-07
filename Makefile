@@ -8,13 +8,19 @@ GOGET=$(GOCMD) get
 
 BINARY=openhab-calendar
 CONFIG=config*.json
-DEPLOY_SERVER=openhab.lan
+DEPLOY_TEST_SERVER=
+DEPLOY_PROD_SERVER=
 DEPLOY_DIR=~/openhab-calendar/
 BUILD_PROD=./build
 TESTS=./...
 COVERAGE_FILE=coverage.out
 
-.PHONY: all test build coverage clean build-prod deploy deploy-config
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
+.PHONY: all test build coverage clean build-linux deploy-test deploy-prod deploy-config
 
 all: test build
 
@@ -32,14 +38,16 @@ clean:
 		$(GOCLEAN)
 		rm -f $(BINARY) $(COVERAGE_FILE) ${BUILD_PROD}/$(BINARY)
 
-build-prod:
-		GOOS="linux" GOARCH="arm" GOARM="7" $(GOBUILD) -o ${BUILD_PROD}/$(BINARY) -v
-
-build-test:
+build-linux:
 		GOOS="linux" GOARCH="amd64" $(GOBUILD) -o ${BUILD_PROD}/$(BINARY) -v
 
-deploy: build-prod
-		rsync -avz ${BUILD_PROD}/$(BINARY) $(DEPLOY_SERVER):$(DEPLOY_DIR)
+deploy-test: build-linux
+		rsync -av ${BUILD_PROD}/$(BINARY) $(DEPLOY_TEST_SERVER):$(DEPLOY_DIR)
+		ssh $(DEPLOY_TEST_SERVER) "sudo systemctl restart $(BINARY)"
 
-deploy-config: build-prod
-		rsync -avz $(CONFIG) $(DEPLOY_SERVER):$(DEPLOY_DIR)
+deploy-prod: build-linux
+		rsync -av ${BUILD_PROD}/$(BINARY) $(DEPLOY_PROD_SERVER):$(DEPLOY_DIR)
+
+deploy-config:
+		rsync -av $(CONFIG) $(DEPLOY_TEST_SERVER):$(DEPLOY_DIR)
+		rsync -av $(CONFIG) $(DEPLOY_PROD_SERVER):$(DEPLOY_DIR)

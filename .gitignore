@@ -5,3 +5,4 @@
 /openhab-calendar
 /openhab-calendar.log
 /coverage.out
+/.env
