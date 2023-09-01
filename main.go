@@ -75,15 +75,15 @@ func main() {
 	fmt.Println(result)
 }
 
-func getCalendarResult(dateInput string, config Configuration, loader *Loader) (string, error) {
+func getCalendarResult(dateInput string, config Configuration, loader *Loader) (Result, error) {
 	date, err := parseDate(dateInput)
 	if err != nil {
-		return "ERROR", fmt.Errorf("cannot parse date input: %w", err)
+		return ResultError, fmt.Errorf("cannot parse date input: %w", err)
 	}
 	result, err := loader.GetResultFromRules(date, config.Rules)
-	if result == "" {
+	if result.Calendar == "" {
 		// no match: return the default
-		result = config.Default.Result
+		result.Calendar = config.Default.Result
 		// and an error if there was none
 		if err == nil {
 			err = errors.New("no match")
@@ -100,6 +100,9 @@ func parseDate(get string) (time.Time, error) {
 	if get == "" || strings.ToLower(get) == "tomorrow" {
 		// default to tomorrow
 		return getTomorrow(time.Now()), nil
+	}
+	if strings.ToLower(get) == "today" {
+		return time.Now(), nil
 	}
 	return time.Parse(time.RFC3339, get)
 }

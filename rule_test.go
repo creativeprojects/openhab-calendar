@@ -77,7 +77,7 @@ func TestGetResultFromRules(t *testing.T) {
 
 			result, err := loader.GetResultFromRules(day, rules)
 			require.NoError(t, err)
-			assert.Equal(t, testItem.result, result)
+			assert.Equal(t, testItem.result, result.Calendar)
 		})
 	}
 }

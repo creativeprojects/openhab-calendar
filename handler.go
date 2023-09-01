@@ -9,8 +9,9 @@ import (
 )
 
 type CalendarResult struct {
-	Calendar string `json:"calendar"`
-	Error    string `json:"error,omitempty"`
+	Calendar string              `json:"calendar"`
+	Override []map[string]string `json:"override,omitempty"`
+	Error    string              `json:"error,omitempty"`
 }
 
 func getCalendarHandler(config Configuration) http.HandlerFunc {
@@ -26,18 +27,21 @@ func getCalendarHandler(config Configuration) http.HandlerFunc {
 			return
 		}
 
-		var (
-			result CalendarResult
-			err    error
-		)
-		result.Calendar, err = getCalendarResult(date, config, loader)
+		result, err := getCalendarResult(date, config, loader)
+		calendarResult := CalendarResult{
+			Calendar: result.Calendar,
+			Override: result.Metadata,
+		}
 		if err != nil {
 			clog.Error(err)
-			result.Error = err.Error()
+			calendarResult.Error = err.Error()
 		}
 
 		encoder := json.NewEncoder(w)
-		encoder.Encode(&result)
+		err = encoder.Encode(&calendarResult)
+		if err != nil {
+			clog.Error(err)
+		}
 	}
 }
 

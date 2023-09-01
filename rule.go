@@ -2,37 +2,39 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	ics "github.com/arran4/golang-ical"
 	"github.com/creativeprojects/clog"
+	"gopkg.in/yaml.v3"
 )
 
-func (l *Loader) GetResultFromRules(date time.Time, rules []RuleConfiguration) (string, error) {
+func (l *Loader) GetResultFromRules(date time.Time, rules []RuleConfiguration) (Result, error) {
 	for _, rule := range rules {
 		if !HasMatchingDays(date, rule.Weekdays) {
 			continue
 		}
 		if rule.Calendar.URL == "" && rule.Calendar.File == "" {
 			// no calendar to check, this is a simple weekday match
-			return rule.Result, nil
+			return Result{Calendar: rule.Result}, nil
 		}
 		clog.Debugf("Loading %s...", rule.Name)
 		cal, err := l.LoadCalendar(rule.Calendar.File, rule.Calendar.URL)
 		if err != nil {
-			return "ERROR", fmt.Errorf("cannot load calendar '%s': %w", rule.Name, err)
+			return ResultError, fmt.Errorf("cannot load calendar '%s': %w", rule.Name, err)
 		}
 		events := cal.Events()
 		if len(events) == 0 {
 			continue
 		}
 		clog.Debugf("  %s calendar has %d entries", rule.Name, len(events))
-		if HasMatchingEvent(date, events) {
-			return rule.Result, nil
+		if event := FindMatchingEvent(date, events); event != nil {
+			return Result{Calendar: rule.Result, Metadata: getEventMetadata(event)}, nil
 		}
 	}
 	// empty value will return the default
-	return "", nil
+	return Result{}, nil
 }
 
 // HasMatchingDays returns true if the date is in the specified weekdays.
@@ -49,7 +51,7 @@ func HasMatchingDays(day time.Time, weekdays []Weekday) bool {
 	return false
 }
 
-func HasMatchingEvent(day time.Time, events []*ics.VEvent) bool {
+func FindMatchingEvent(day time.Time, events []*ics.VEvent) *ics.VEvent {
 	dateFormat := "20060102"
 	loc, _ := time.LoadLocation("Local")
 
@@ -69,9 +71,29 @@ func HasMatchingEvent(day time.Time, events []*ics.VEvent) bool {
 		}
 		clog.Debugf("    event from %v to %v", startTime, endTime)
 		if day.After(startTime) && day.Before(endTime) {
-			return true
+			return event
 		}
 	}
 	clog.Debug("  --> no match")
-	return false
+	return nil
+}
+
+func getEventMetadata(event *ics.VEvent) []map[string]string {
+	description := event.GetProperty(ics.ComponentPropertyDescription)
+	if description == nil {
+		return nil
+	}
+	value := description.Value
+	if value == "" {
+		return nil
+	}
+	value = strings.ReplaceAll(value, `\n`, "\n")
+	clog.Debugf("Metadata:\n%s\n", value)
+
+	metadata := make([]map[string]string, 0)
+	err := yaml.NewDecoder(strings.NewReader(value)).Decode(&metadata)
+	if err != nil {
+		clog.Errorf("cannot parse metadata: %v", err)
+	}
+	return metadata
 }

@@ -2,12 +2,12 @@ package main
 
 import "time"
 
-func (l *Loader) PostRules(result string, date time.Time, rules []RuleConfiguration, postRules []PostRuleConfiguration) (string, error) {
+func (l *Loader) PostRules(result Result, date time.Time, rules []RuleConfiguration, postRules []PostRuleConfiguration) (Result, error) {
 	for _, postRule := range postRules {
 		if postRule.When == nil {
 			continue
 		}
-		if !MatchPostRule(result, *postRule.When) {
+		if !MatchPostRule(result.Calendar, *postRule.When) {
 			continue
 		}
 		if postRule.Previous != nil {
@@ -15,7 +15,7 @@ func (l *Loader) PostRules(result string, date time.Time, rules []RuleConfigurat
 			if err != nil {
 				return result, err
 			}
-			if !MatchPostRule(previous, *postRule.Previous) {
+			if !MatchPostRule(previous.Calendar, *postRule.Previous) {
 				continue
 			}
 		}
@@ -24,12 +24,12 @@ func (l *Loader) PostRules(result string, date time.Time, rules []RuleConfigurat
 			if err != nil {
 				return result, err
 			}
-			if !MatchPostRule(next, *postRule.Next) {
+			if !MatchPostRule(next.Calendar, *postRule.Next) {
 				continue
 			}
 		}
 		// that's a match!
-		return postRule.Result, nil
+		return Result{Calendar: postRule.Result}, nil
 	}
 	return result, nil
 }

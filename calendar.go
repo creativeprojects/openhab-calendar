@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -119,7 +119,7 @@ func (l *Loader) SaveRemoteCalendar(url, to string) error {
 		return fmt.Errorf("server returned %s", response.Status)
 	}
 	// read all remote content
-	content, err := ioutil.ReadAll(response.Body)
+	content, err := io.ReadAll(response.Body)
 	if err != nil {
 		return err
 	}

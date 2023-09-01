@@ -77,7 +77,7 @@ func TestGetResultFromPostRules(t *testing.T) {
 			require.NoError(t, err)
 			result, err = loader.PostRules(result, day, rules, postRules)
 			require.NoError(t, err)
-			assert.Equal(t, testItem.result, result)
+			assert.Equal(t, testItem.result, result.Calendar)
 		})
 	}
 }
