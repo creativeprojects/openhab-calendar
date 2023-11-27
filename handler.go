@@ -14,6 +14,17 @@ type CalendarResult struct {
 	Error    string              `json:"error,omitempty"`
 }
 
+func getHealthHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		clog.Debugf("%s %s", r.Method, r.URL.Path)
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
 func getCalendarHandler(config Configuration) http.HandlerFunc {
 	loader := NewLoader(config)
 

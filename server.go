@@ -71,6 +71,7 @@ func (s *HTTPServer) Start(config Configuration) {
 
 func getServeMux(config Configuration) *http.ServeMux {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/health", getHealthHandler())
 	mux.HandleFunc("/calendar", getCalendarHandler(config))
 
 	return mux

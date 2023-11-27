@@ -113,11 +113,11 @@ func startServer(config Configuration) {
 
 	notifyReady()
 
-	// systemd watchdog
-	go setupWatchdog()
-
 	servers := setupServices(config)
 	if len(servers) > 0 {
+		// systemd watchdog
+		go setupWatchdog(servers)
+
 		// Wait until we're politely asked to leave
 		<-stop
 	}

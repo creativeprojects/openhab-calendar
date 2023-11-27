@@ -49,5 +49,5 @@ deploy-prod: build-linux
 		rsync -av ${BUILD_PROD}/$(BINARY) $(DEPLOY_PROD_SERVER):$(DEPLOY_DIR)
 
 deploy-config:
-		rsync -av $(CONFIG) $(DEPLOY_TEST_SERVER):$(DEPLOY_DIR)
+		# rsync -av $(CONFIG) $(DEPLOY_TEST_SERVER):$(DEPLOY_DIR)
 		rsync -av $(CONFIG) $(DEPLOY_PROD_SERVER):$(DEPLOY_DIR)

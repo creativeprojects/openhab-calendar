@@ -1,0 +1,28 @@
+- time: 02:10
+  DesiredTemperature: 20
+- time: 03:00
+  Stairs_Fairy_Lights: ON
+  Outside_Front_Lighting_Switch: ON
+  Back_Garden_Lighting_Switch: ON
+  Christmas_Tree_Switch: ON
+- time: 03:10
+  DesiredTemperature: 18
+- time: 04:15
+  Stairs_Fairy_Lights: OFF
+  Outside_Front_Lighting_Switch: OFF
+  Back_Garden_Lighting_Switch: OFF
+  Christmas_Tree_Switch: OFF
+
+- time: 07:10
+  DesiredTemperature: 20
+
+- time: 10:00
+  DesiredTemperature: -=2
+
+- time: 22:50
+  DesiredTemperature: 18
+- time: 23:00
+  Stairs_Fairy_Lights: OFF
+  Outside_Front_Lighting_Switch: OFF
+  Back_Garden_Lighting_Switch: OFF
+  Christmas_Tree_Switch: OFF

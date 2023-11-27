@@ -2,6 +2,7 @@
 /files
 /config.json
 /config-url.json
+/config-local.json
 /openhab-calendar
 /openhab-calendar.log
 /coverage.out
