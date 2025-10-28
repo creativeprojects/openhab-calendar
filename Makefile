@@ -39,7 +39,7 @@ clean:
 		rm -f $(BINARY) $(COVERAGE_FILE) ${BUILD_PROD}/$(BINARY)
 
 build-linux:
-		GOOS="linux" GOARCH="amd64" $(GOBUILD) -o ${BUILD_PROD}/$(BINARY) -v
+		GOOS="linux" GOARCH="amd64" GOAMD64=v3 $(GOBUILD) -o ${BUILD_PROD}/$(BINARY) -v
 
 deploy-test: build-linux
 		rsync -av ${BUILD_PROD}/$(BINARY) $(DEPLOY_TEST_SERVER):$(DEPLOY_DIR)

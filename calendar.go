@@ -80,7 +80,7 @@ func (l *Loader) LoadLocalCalendar(filename string) (*ics.Calendar, error) {
 }
 
 func (l *Loader) LoadRemoteCalendar(url string) (*ics.Calendar, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), l.timeout*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), l.timeout)
 	defer cancel()
 
 	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -101,7 +101,7 @@ func (l *Loader) LoadRemoteCalendar(url string) (*ics.Calendar, error) {
 }
 
 func (l *Loader) SaveRemoteCalendar(url, to string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), l.timeout*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), l.timeout)
 	defer cancel()
 
 	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)

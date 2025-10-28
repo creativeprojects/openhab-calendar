@@ -56,6 +56,7 @@ type ServerConfiguration struct {
 	Listen      string `json:"listen"`
 	Certificate string `json:"certificate"`
 	PrivateKey  string `json:"privateKey"`
+	Prometheus  bool   `json:"prometheusEnabled"`
 }
 
 func LoadFileConfiguration(filename string) (Configuration, error) {

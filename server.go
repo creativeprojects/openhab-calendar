@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/creativeprojects/clog"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // HTTPServer encapsulates a *http.Server
@@ -54,7 +55,7 @@ func (s *HTTPServer) Start(config Configuration) {
 	clog.Debugf("%v: listening on %q", s.name, s.listen)
 	s.server = &http.Server{
 		Addr:     s.listen,
-		Handler:  getServeMux(config),
+		Handler:  s.getServeMux(config),
 		ErrorLog: log.New(clog.NewWriter(clog.LevelError, clog.GetDefaultLogger()), "http.Server", 0),
 	}
 	if s.tls {
@@ -69,10 +70,14 @@ func (s *HTTPServer) Start(config Configuration) {
 	clog.Debugf("%v: stopped listening", s.name)
 }
 
-func getServeMux(config Configuration) *http.ServeMux {
+func (s *HTTPServer) getServeMux(config Configuration) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", getHealthHandler())
 	mux.HandleFunc("/calendar", getCalendarHandler(config))
+	if s.config.Prometheus {
+		mux.Handle("/metrics", promhttp.Handler())
+		clog.Debugf("%v: Prometheus metrics enabled on /metrics", s.name)
+	}
 
 	return mux
 }
