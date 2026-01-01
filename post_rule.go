@@ -1,13 +1,12 @@
 package main
 
-import "time"
+import (
+	"time"
+)
 
 func (l *Loader) PostRules(result Result, date time.Time, rules []RuleConfiguration, postRules []PostRuleConfiguration) (Result, error) {
 	for _, postRule := range postRules {
-		if postRule.When == nil {
-			continue
-		}
-		if !MatchPostRule(result.Calendar, *postRule.When) {
+		if postRule.When != nil && !MatchPostRule(result.Calendar, *postRule.When) {
 			continue
 		}
 		if postRule.Previous != nil {

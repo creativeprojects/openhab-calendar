@@ -61,6 +61,7 @@ func TestGetResultFromPostRules(t *testing.T) {
 		{"20210515", "FirstOff"},
 		{"20210516", "Weekend"},
 		{"20210517", "Weekday"},
+		{"20211222", "Weekday"},
 	}
 
 	loc, err := time.LoadLocation("Local")
@@ -73,6 +74,8 @@ func TestGetResultFromPostRules(t *testing.T) {
 			day, err := time.ParseInLocation(dateFormat, testItem.day, loc)
 			require.NoError(t, err)
 
+			day = day.Add(time.Minute)
+
 			result, err := loader.GetResultFromRules(day, rules)
 			require.NoError(t, err)
 			result, err = loader.PostRules(result, day, rules, postRules)
@@ -80,4 +83,15 @@ func TestGetResultFromPostRules(t *testing.T) {
 			assert.Equal(t, testItem.result, result.Calendar)
 		})
 	}
+}
+
+func TestParseDateOnly(t *testing.T) {
+	year := 2021
+	loc, err := time.LoadLocation("Local")
+	require.NoError(t, err)
+
+	date, err := parseDateInYear("18 Feb", year, loc)
+	require.NoError(t, err)
+	t.Log(date)
+	assert.True(t, date.Equal(time.Date(year, 2, 18, 0, 0, 0, 0, loc)))
 }

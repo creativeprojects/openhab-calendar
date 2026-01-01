@@ -18,6 +18,8 @@ type RuleConfiguration struct {
 	Priority int                   `json:"priority"`
 	Name     string                `json:"name"`
 	Weekdays []Weekday             `json:"weekdays"`
+	From     string                `json:"from"`
+	Until    string                `json:"until"`
 	Calendar CalendarConfiguration `json:"calendar"`
 	Result   string                `json:"result"`
 }

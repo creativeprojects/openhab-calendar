@@ -42,6 +42,16 @@ func TestGetResultFromRules(t *testing.T) {
 	dateFormat := "20060102"
 	rules := []RuleConfiguration{
 		{
+			From:   "23 dec",
+			Until:  "31 dec",
+			Result: "Christmas",
+		},
+		{
+			From:   "1 jan",
+			Until:  "2 jan",
+			Result: "NewYear",
+		},
+		{
 			Result:   "Weekday",
 			Weekdays: []Weekday{1, 2, 3, 4, 5},
 		},
@@ -63,6 +73,13 @@ func TestGetResultFromRules(t *testing.T) {
 		{"20200913", "Weekend"},
 		{"20200914", "Weekday"},
 		{"20200915", "Weekday"},
+		{"20211222", "Weekday"},
+		{"20211223", "Christmas"},
+		{"20211224", "Christmas"},
+		{"20211231", "Christmas"},
+		{"20220101", "NewYear"},
+		{"20220102", "NewYear"},
+		{"20220103", "Weekday"},
 	}
 
 	loc, err := time.LoadLocation("Local")

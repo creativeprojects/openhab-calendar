@@ -1,6 +1,6 @@
 module github.com/creativeprojects/openhab-calendar
 
-go 1.25.3
+go 1.25.5
 
 require (
 	github.com/arran4/golang-ical v0.3.2

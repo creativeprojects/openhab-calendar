@@ -72,7 +72,8 @@ func main() {
 	if err != nil {
 		clog.Error(err)
 	}
-	fmt.Println(result)
+	fmt.Println("Result:", result.Calendar)
+	fmt.Println("Metadata:", result.Metadata)
 }
 
 func getCalendarResult(dateInput string, config Configuration, loader *Loader) (Result, error) {

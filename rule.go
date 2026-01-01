@@ -15,8 +15,26 @@ func (l *Loader) GetResultFromRules(date time.Time, rules []RuleConfiguration) (
 		if !HasMatchingDays(date, rule.Weekdays) {
 			continue
 		}
+		if rule.From != "" {
+			from, err := parseDateInYear(rule.From, date.Year(), date.Location())
+			if err != nil {
+				return ResultError, fmt.Errorf("cannot parse 'From': %w", err)
+			}
+			if !from.IsZero() && from.After(date) {
+				continue
+			}
+		}
+		if rule.Until != "" {
+			to, err := parseDateInYear(rule.Until, date.Year(), date.Location())
+			if err != nil {
+				return ResultError, fmt.Errorf("cannot parse 'To': %w", err)
+			}
+			if !to.IsZero() && to.Before(date) {
+				continue
+			}
+		}
 		if rule.Calendar.URL == "" && rule.Calendar.File == "" {
-			// no calendar to check, this is a simple weekday match
+			// no calendar to check, this is a simple date or weekday match
 			return Result{Calendar: rule.Result}, nil
 		}
 		clog.Debugf("Loading %s...", rule.Name)
@@ -96,4 +114,12 @@ func getEventMetadata(event *ics.VEvent) []map[string]string {
 		clog.Errorf("cannot parse metadata: %v", err)
 	}
 	return metadata
+}
+
+func parseDateInYear(value string, year int, loc *time.Location) (time.Time, error) {
+	date, err := time.ParseInLocation("_2 Jan", value, loc)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return date.AddDate(year, 0, 0), nil
 }
