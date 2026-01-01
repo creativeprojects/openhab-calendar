@@ -15,12 +15,14 @@ func (l *Loader) GetResultFromRules(date time.Time, rules []RuleConfiguration) (
 		if !HasMatchingDays(date, rule.Weekdays) {
 			continue
 		}
+
+		midnight := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
 		if rule.From != "" {
 			from, err := parseDateInYear(rule.From, date.Year(), date.Location())
 			if err != nil {
 				return ResultError, fmt.Errorf("cannot parse 'From': %w", err)
 			}
-			if !from.IsZero() && from.After(date) {
+			if !from.IsZero() && from.After(midnight) {
 				continue
 			}
 		}
@@ -29,7 +31,7 @@ func (l *Loader) GetResultFromRules(date time.Time, rules []RuleConfiguration) (
 			if err != nil {
 				return ResultError, fmt.Errorf("cannot parse 'To': %w", err)
 			}
-			if !to.IsZero() && to.Before(date) {
+			if !to.IsZero() && to.Before(midnight) {
 				continue
 			}
 		}

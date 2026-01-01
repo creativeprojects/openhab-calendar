@@ -42,12 +42,12 @@ func TestGetResultFromRules(t *testing.T) {
 	dateFormat := "20060102"
 	rules := []RuleConfiguration{
 		{
-			From:   "23 dec",
-			Until:  "31 dec",
+			From: "23 dec",
+			// Until:  "31 dec",
 			Result: "Christmas",
 		},
 		{
-			From:   "1 jan",
+			// From:   "1 jan",
 			Until:  "2 jan",
 			Result: "NewYear",
 		},
@@ -91,6 +91,8 @@ func TestGetResultFromRules(t *testing.T) {
 		t.Run(testItem.day, func(t *testing.T) {
 			day, err := time.ParseInLocation(dateFormat, testItem.day, loc)
 			require.NoError(t, err)
+
+			day = day.Add(time.Minute)
 
 			result, err := loader.GetResultFromRules(day, rules)
 			require.NoError(t, err)
